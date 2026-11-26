@@ -112,7 +112,8 @@ def drive_tests(d, subset, close=False):
         record("H3", "wins above win probability at the start of the drive after a breakthrough", "secondary", subset, cluster_gap(d, brk), brk.sum())
 
 
-def main(sample):
+def load(sample):
+    """Plays and drives for one sample, with every event tag the tests use."""
     seasons = {"explore": EXPLORE, "confirm": CONFIRM}[sample]
     p = pd.read_parquet(ROOT / "data" / "plays_x.parquet")
     p = p[p.season.isin(seasons)].sort_values(["team_game", "fixed_drive", "play_id"], ignore_index=True)
@@ -144,21 +145,36 @@ def main(sample):
     loss, gain = d.min_epa <= -2, d.max_epa >= 2
     d["swing_tag"] = np.select([loss & gain, loss & (d.min_epa > -3), loss, gain & (d.max_epa < 3), gain], [0, 1, 2, 3, 4], 0)
 
-    drive_tests(d, "all")
-    drive_tests(d, "close", close=True)
-    # Long, good drives are more often a team's last drive, so drop it as a check on the shuffle.
-    drive_tests(d[d.pos < d.groupby("team_game").pos.transform("max")], "without last drive")
-
-    # ---------- H4: where the ball goes ----------
     p["side"] = np.where(p.play_type == "pass", p.pass_location, p.run_location)
     prev = p.groupby(drive_key)[["good", "play_type", "side"]].shift(1)
     p["prev_good"], p["prev_type"], p["prev_side"] = prev.good == 1, prev.play_type, prev.side
     p["dn"] = p.down.clip(upper=3).astype(int)
     p["dist"] = pd.cut(p.ydstogo, [0, 3, 7, 99]).astype(str)
     p["one"] = 1
+    return p, d
+
+
+def same_side_pairs(p):
+    """Plays that follow a play of the same type in the same drive, both with a recorded side."""
     seq = p[p.prev_type.notna()].assign(same_type=lambda x: (x.play_type == x.prev_type).astype(int))
     pairs = seq[(seq.play_type == seq.prev_type) & seq.side.notna() & seq.prev_side.notna()].assign(same=lambda x: (x.side == x.prev_side).astype(int))
-    situation = ["team_game", "dn", "dist", "prev_type"]
+    return seq, pairs
+
+
+SITUATION = ["team_game", "dn", "dist", "prev_type"]
+
+
+def main(sample):
+    p, d = load(sample)
+    situation = SITUATION
+
+    drive_tests(d, "all")
+    drive_tests(d, "close", close=True)
+    # Long, good drives are more often a team's last drive, so drop it as a check on the shuffle.
+    drive_tests(d[d.pos < d.groupby("team_game").pos.transform("max")], "without last drive")
+
+    # ---------- H4: where the ball goes ----------
+    seq, pairs = same_side_pairs(p)
     for subset, e in (("all", pairs), ("close", pairs[pairs.vegas_wp.between(0.2, 0.8)])):
         res, n = label_test(e, "prev_good", "same", "one", situation + ["prev_side"])
         record("H4", "same side as the last play of that type, after success minus after failure", "main", subset, res, n)
