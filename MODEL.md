@@ -33,31 +33,33 @@ Fans feel momentum when success follows success and one mistake leads to another
 ## Part 2: belief about the level that day
 
 - The model is Beta-Binomial.
-  - What we want to know: the offense's success rate today, compared with what the table expects for the situations it faced.
-  - Before the game: a Beta prior centered on the table's rate. It counts as about 390 plays of evidence. That number comes from how much an offense's first half and second half agree.
+  - What we want to know: the offense's success rate today, compared with what we expected before the game for the situations it faced.
+  - The expected rate comes from a model of the situation, the clock, the score, and the betting line. These are the same inputs as expected EPA.
+  - Before the game: a Beta prior centered on the expected rate. It counts as a fixed number of plays of evidence. That number comes from how much an offense's first half and second half agree in the other 19 seasons.
   - Each play adds one success or one failure.
-  - After any number of plays: belief = (successes minus expected successes) divided by (plays so far plus 390).
-  - After 31 plays, a normal first half, the game so far has 7% of the weight and the prior has 93%.
+  - After any number of plays: belief = (successes minus expected successes) divided by (plays so far plus the prior's plays).
   - The 95% credible band comes from the Beta distribution that the prior and the plays give.
 - We compare it with a Normal-Normal model on EPA.
   - Prior: the offense's level in EPA above expected per play is Normal, centered on zero. It counts as about 500 plays.
   - Each play's EPA above expected is treated as Normal around that level. Real plays have more extreme values than a Normal curve, so this is an approximation.
   - Belief = the average so far times plays / (plays + 500).
 - First look on 2006-2019
-  - Success version: the model says a first half should move the second-half forecast by 7.4% of the first-half surplus. The data gives 6.2%.
+  - Success version, with the prior centered on the table alone: the prior counts as about 390 plays. The model says a first half should move the second-half forecast by 7.4% of the first-half surplus. The data gives 6.2%.
   - EPA version: the model says 5.7%. The data gives 5.0%.
 - Question 1: does the belief forecast the next drive?
   - Unit: each drive from an offense's second drive on, weighted by its number of plays.
-  - Outcome: the drive's success rate above the table. Second outcome: its EPA above expected per play.
+  - Outcome: the drive's success rate above expected. Second outcome: its EPA above expected per play.
+  - We also report the slope for a prior centered on the table alone. That version also learns what the betting line already knew.
   - Measure: the slope of the outcome on the belief at the start of the drive. A slope of 1 means the belief has the correct size.
   - We also report the gap in outcome between the top and bottom fifth of belief.
 - Question 2: what carries the information?
-  - Three summaries of the offense's plays so far, each measured against what the table expects: the success rate, the rate of gains of 2 or more EPA, and the rate of losses of 2 or more EPA.
+  - Three summaries of the offense's plays so far: successes above expected, gains of 2 or more EPA above what the table expects, and losses of 2 or more EPA above what the table expects.
+  - Each is divided by (plays so far plus the prior's plays), as the belief is, so that early drives with few plays do not dominate.
   - Measure: one regression of the next drive's EPA above expected per play on all three, each in standard-deviation units.
   - "Steady success carries it": the success-rate coefficient is positive.
   - "Losses tell us more than gains": the size of the loss coefficient is larger than the size of the gain coefficient.
 - Question 3: is the level fixed, or does it move during the game?
-  - Measure: add the previous drive's success rate above the table to the Question 1 regression.
+  - Measure: add the previous drive's success rate above expected to the Question 1 regression.
   - "Recent plays count extra": its coefficient is positive.
 
 ## Part 3: what is left
@@ -67,10 +69,15 @@ Fans feel momentum when success follows success and one mistake leads to another
 
 ## What we will show
 
-- One chart that splits the "success follows success" gap into the table, the level that day, and what is left.
+- One chart that splits the "success follows success" gap into four parts: the table, what we knew before the game together with the score and clock, the level that day, and what is left.
+  - The level that day for a play is the offense's success above expected on its other plays in that game, leaving out the play itself and the play before it.
 - One game drawn play by play: the belief and its credible band for both offenses.
 
 ## Limits
 
 - The expected-EPA model uses the score and the clock. A team that plays well gets a lead and then plays more carefully, which lowers its later numbers. Part 2 measures the information that is left after that effect.
 - The all-seasons view includes 2006-2019, where we took the first looks above. The 2020-2025 view is the clean one.
+
+## Changes before the run
+
+- The success belief first used a prior centered on the table alone. A good offense succeeds more often than the table says from its first play, so that belief would learn during the game what the betting line already knew. The prior is now centered on a rate that includes the betting line. This change was made before any result in this file existed.
