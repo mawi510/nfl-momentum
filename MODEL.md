@@ -70,7 +70,7 @@ Fans feel momentum when success follows success and one mistake leads to another
 ## What we will show
 
 - One chart that splits the "success follows success" gap into four parts: the table, what we knew before the game together with the score and clock, the level that day, and what is left.
-  - The level that day for a play is the offense's success above expected on its other plays in that game, leaving out the play itself and the play before it.
+  - The level that day for a play is the offense's success above expected on its other drives in that game.
 - One game drawn play by play: the belief and its credible band for both offenses.
 
 ## Limits
@@ -81,3 +81,7 @@ Fans feel momentum when success follows success and one mistake leads to another
 ## Changes before the run
 
 - The success belief first used a prior centered on the table alone. A good offense succeeds more often than the table says from its first play, so that belief would learn during the game what the betting line already knew. The prior is now centered on a rate that includes the betting line. This change was made before any result in this file existed.
+
+## Changes after the run
+
+- The chart's "level that day" first used the offense's other plays in the game, leaving out only the play itself and the play before it. That number was biased low. Plays in one drive are tied together, because a drive continues after a success and ends on a failure: across plays in the same drive the covariance of success above expected is -0.0003, against +0.0007 across different drives. The level now uses other drives only. With the first version the split was 0.05 points for the level and 0.29 left over. No other result in this file uses this number.
